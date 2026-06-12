@@ -1,8 +1,8 @@
 {
-  "//": "DELIVERABLE for the personal-site repo (elijahwf.com on Vercel) — not used by this repo's deployment. Replace <swa-hostname> with the Static Web App default hostname (Bicep output staticWebAppHostname). The /ttb/api rewrite is required: the SPA calls /ttb/api/* when served from elijahwf.com, and Vercel must proxy that to the SWA's /api/*.",
+  "//": "DELIVERABLE for the personal-site repo (elijahwf.com on Vercel) — not used by this repo's deployment. The /ttb/api rewrite is required: the SPA calls /ttb/api/* when served from elijahwf.com, and Vercel must proxy that to the SWA's /api/*. Keep the rules in this order.",
   "rewrites": [
-    { "source": "/ttb", "destination": "https://<swa-hostname>/ttb/" },
-    { "source": "/ttb/api/:path*", "destination": "https://<swa-hostname>/api/:path*" },
-    { "source": "/ttb/:path*", "destination": "https://<swa-hostname>/ttb/:path*" }
+    { "source": "/ttb", "destination": "https://polite-sky-01fb40410.7.azurestaticapps.net/ttb/" },
+    { "source": "/ttb/api/:path*", "destination": "https://polite-sky-01fb40410.7.azurestaticapps.net/api/:path*" },
+    { "source": "/ttb/:path*", "destination": "https://polite-sky-01fb40410.7.azurestaticapps.net/ttb/:path*" }
   ]
 }
