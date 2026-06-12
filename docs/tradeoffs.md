@@ -11,6 +11,19 @@ Decisions made where the spec left room, with reasoning. Updated as the build pr
 
 ## Backend
 
+- **Initial deploy done via SWA CLI with vendored Linux wheels** (the CLI skips the
+  API's Oryx build, unlike the GitHub Actions deployer, so `requirements.txt` wasn't
+  installed — manylinux cp310 wheels are pip-installed into
+  `api/.python_packages/lib/site-packages`, which the Functions worker adds to
+  sys.path). The gitignored folder is irrelevant to the Actions/Oryx path, which is
+  the durable pipeline once repo secrets are configured. Both paths are in
+  docs/deployment.md §4.
+- **A root `dist/index.html` redirect is generated post-build**
+  (frontend/scripts/postbuild.mjs) because SWA's deployment validator requires a
+  default file at the artifact root, and the real app lives at `dist/ttb/index.html`.
+- **API runtime is `python:3.10`, not the spec's 3.11.** SWA's deployment tooling
+  rejects `python:3.11` as an apiRuntime value (its supported list tops out at 3.10);
+  the code uses nothing newer than 3.10 syntax, so this is a config-only deviation.
 - **Azure Functions v1 programming model (function.json folders), not the v2 decorator
   model.** SWA *managed* functions are pickier about the v2 model across runtime
   versions; the folder-per-function layout is the most battle-tested path and matches

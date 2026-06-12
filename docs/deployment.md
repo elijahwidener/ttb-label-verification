@@ -54,8 +54,26 @@ them in `POSTGRES_URL`.
 ## 4. Deploy the app
 
 Push to `master` (or run the **Deploy to Azure Static Web Apps** workflow manually).
-The workflow builds the Vite frontend and packages the Python API. The database schema
+The workflow builds the Vite frontend and packages the Python API (the Actions
+builder runs Oryx, which pip-installs `api/requirements.txt`). The database schema
 is applied automatically on the API's first connection — no psql step.
+
+**Alternative: direct deploy via SWA CLI** (no GitHub secrets needed). The CLI does
+*not* run Oryx for the API, so Linux wheels must be vendored first:
+
+```bash
+pip install --target api/.python_packages/lib/site-packages \
+  --platform manylinux2014_x86_64 --implementation cp --python-version 3.10 \
+  --abi cp310 --only-binary=:all: -r api/requirements.txt exceptiongroup
+cd frontend && npm install && npm run build && cd ..
+SWA_CLI_DEPLOYMENT_TOKEN=<deployment-token> npx --yes @azure/static-web-apps-cli@2.0.6 \
+  deploy ./frontend/dist --api-location ./api --swa-config-location ./frontend \
+  --api-language python --api-version 3.10 --env production
+```
+
+(`exceptiongroup` is listed explicitly because pip evaluates the `python_version <
+"3.11"` marker against the *local* interpreter, not `--python-version`.)
+`api/.python_packages` is gitignored — the Actions/Oryx path doesn't need it.
 
 Verify on the SWA host directly:
 

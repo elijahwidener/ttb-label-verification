@@ -34,7 +34,7 @@ in [docs/](docs/).
 | Path | What |
 |---|---|
 | `frontend/` | React 18 + Vite + Tailwind SPA (routes `/submit`, `/review`; base path `/ttb/`) |
-| `api/` | Azure Functions (Python 3.11): submit pipeline, queue/decision endpoints, retention sweep |
+| `api/` | Azure Functions (Python 3.10): submit pipeline, queue/decision endpoints, retention sweep |
 | `api/shared/` | extraction.py (Claude), validation.py (decision engine), blob.py, db.py, prompts.py |
 | `infra/main.bicep` | SWA Standard + PostgreSQL Flexible (B1ms) + Blob Storage (quarantine/labels, lifecycle, CORS) |
 | `db/schema.sql` | Canonical schema (auto-applied by the API on first connection) |

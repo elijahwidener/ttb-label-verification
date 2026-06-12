@@ -7,3 +7,6 @@ __pycache__/
 local.settings.json
 .env
 .DS_Store
+swa-deploy.log
+*-api.zip
+*-app.zip
