@@ -62,7 +62,7 @@ Decisions made where the spec left room, with reasoning. Updated as the build pr
 
 ## Infra
 
-- **Single region (default eastus2), LRS storage, Burstable B1ms Postgres, 7-day
+- **Single region (default centralus), LRS storage, Burstable B1ms Postgres, 7-day
   backups, no HA** — cost floor for a prototype (~$25–35/month total). Postgres
   firewall allows Azure-services traffic only (SWA managed functions have no static
   egress IPs); SSL required.

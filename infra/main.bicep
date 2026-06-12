@@ -4,12 +4,12 @@
 // containers, lifecycle policies, browser-upload CORS).
 //
 // Deploy:
-//   az group create -n ttb-rg -l eastus2
+//   az group create -n ttb-rg -l centralus
 //   az deployment group create -g ttb-rg -f infra/main.bicep \
 //     --parameters postgresAdminPassword='<strong-password>'
 
-@description('Region for all resources. SWA supports a limited region set; eastus2 works for everything here.')
-param location string = 'eastus2'
+@description('Region for all resources. SWA supports a limited region set; centralus works for everything here.')
+param location string = 'centralus'
 
 @description('Short prefix for resource names.')
 param namePrefix string = 'ttb'

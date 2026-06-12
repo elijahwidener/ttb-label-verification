@@ -12,7 +12,7 @@ everything else is automatic once configured.
 ## 1. [YOU] Provision Azure resources
 
 ```bash
-az group create -n ttb-rg -l eastus2
+az group create -n ttb-rg -l centralus
 
 az deployment group create -g ttb-rg -f infra/main.bicep \
   --parameters postgresAdminPassword='<CHOOSE-A-STRONG-PASSWORD>' \
