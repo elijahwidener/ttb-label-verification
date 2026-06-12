@@ -1,0 +1,21 @@
+C4Container
+    title Container Diagram — TTB Label Verification System
+    Person(submitter, "Importer / Submitter")
+    Person(agent, "Compliance Agent")
+    System_Ext(anthropic, "Anthropic API", "Claude Vision")
+    System_Boundary(ttb, "TTB Label Verification System") {
+        Container(web, "Web Application", "React + Vite", "Submitter and Agent user interface")
+        Container(api, "API", "Azure Functions (Python)", "Submission processing, validation, decisions, storage orchestration")
+        Container(extraction, "Extraction & Validation Engine", "Python Modules", "AI extraction, deterministic field validation, auto-decision logic")
+        ContainerDb(blob, "Blob Storage", "Azure Blob Storage", "Front and back label images")
+        ContainerDb(db, "PostgreSQL", "Azure Database for PostgreSQL", "Applications, validation results, decisions")
+    }
+    Rel(submitter, web, "Submit Application")
+    Rel(agent, web, "Review Applications")
+    Rel(web, api, "HTTPS / JSON")
+    Rel(api, extraction, "Process Submission")
+    Rel(extraction, anthropic, "Extract Label Data")
+    Rel(api, db, "Query Queue & Decisions")
+    Rel(extraction, db, "Store Results")
+    Rel(api, blob, "Store / Retrieve Images")
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")

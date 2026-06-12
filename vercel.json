@@ -1,0 +1,8 @@
+{
+  "//": "DELIVERABLE for the personal-site repo (elijahwf.com on Vercel) — not used by this repo's deployment. Replace <swa-hostname> with the Static Web App default hostname (Bicep output staticWebAppHostname). The /ttb/api rewrite is required: the SPA calls /ttb/api/* when served from elijahwf.com, and Vercel must proxy that to the SWA's /api/*.",
+  "rewrites": [
+    { "source": "/ttb", "destination": "https://<swa-hostname>/ttb/" },
+    { "source": "/ttb/api/:path*", "destination": "https://<swa-hostname>/api/:path*" },
+    { "source": "/ttb/:path*", "destination": "https://<swa-hostname>/ttb/:path*" }
+  ]
+}

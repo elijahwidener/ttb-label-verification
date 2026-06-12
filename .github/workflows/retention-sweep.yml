@@ -1,0 +1,23 @@
+# Daily image-retention sweep. SWA *managed* functions only support HTTP
+# triggers (no timers), so the daily cron lives here and calls the sweep
+# endpoint. Blob lifecycle policies are the independent 30-day backstop.
+#
+# Required repository configuration:
+#   - variable SWA_HOSTNAME   e.g. happy-rock-0abc12345.6.azurestaticapps.net
+#   - secret  RETENTION_SWEEP_KEY  matching the app setting of the same name
+name: Retention sweep
+
+on:
+  schedule:
+    - cron: "0 7 * * *" # daily 07:00 UTC
+  workflow_dispatch:
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call retention sweep endpoint
+        run: |
+          curl --fail-with-body -X POST \
+            -H "x-sweep-key: ${{ secrets.RETENTION_SWEEP_KEY }}" \
+            "https://${{ vars.SWA_HOSTNAME }}/api/retention-sweep"

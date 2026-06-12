@@ -1,0 +1,10 @@
+C4Context
+    title System Context — TTB Label Verification Prototype
+    Person(submitter, "Importer / Submitter", "Uploads label applications, one at a time or in bulk. Receives immediate image-quality feedback.")
+    Person(agent, "Compliance Agent", "Reviews pre-processed applications and approves or rejects.")
+    System(ttb, "TTB Label Verification System", "Pre-processes submissions with AI extraction + rule-based validation. Surfaces results to agents for fast human review.")
+    System_Ext(anthropic, "Anthropic API", "Claude vision model — extracts label text from images.")
+    System_Ext(cola, "COLA System", "Existing TTB system. NOT integrated in prototype.")
+    Rel(submitter, ttb, "Submits label + application data, receives quality feedback")
+    Rel(agent, ttb, "Reviews queue, approves / rejects")
+    Rel(ttb, anthropic, "Extracts fields from images", "HTTPS")

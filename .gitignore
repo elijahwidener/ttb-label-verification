@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.venv/
+__pycache__/
+*.pyc
+.python_packages/
+local.settings.json
+.env
+.DS_Store

@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Designed for users 50+: comfortable base size, high contrast. */
+html {
+  font-size: 17px;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+/* Every interactive control hits the 44px minimum click target. */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 font-semibold
+         min-h-[44px] text-base transition-colors focus:outline-none focus-visible:ring-4
+         focus-visible:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+.btn-primary {
+  @apply btn bg-blue-700 text-white hover:bg-blue-800;
+}
+.btn-secondary {
+  @apply btn bg-white text-slate-800 border-2 border-slate-300 hover:bg-slate-100;
+}
+.btn-approve {
+  @apply btn bg-green-700 text-white hover:bg-green-800;
+}
+.btn-reject {
+  @apply btn bg-red-700 text-white hover:bg-red-800;
+}
+.input {
+  @apply w-full rounded-lg border-2 border-slate-300 px-4 py-3 text-base min-h-[44px]
+         focus:border-blue-600 focus:outline-none bg-white;
+}
+.label {
+  @apply block text-base font-semibold text-slate-800 mb-1;
+}

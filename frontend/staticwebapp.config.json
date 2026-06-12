@@ -1,0 +1,17 @@
+{
+  "platform": {
+    "apiRuntime": "python:3.11"
+  },
+  "trailingSlash": "auto",
+  "routes": [
+    {
+      "route": "/",
+      "redirect": "/ttb/",
+      "statusCode": 302
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/ttb/index.html",
+    "exclude": ["/api/*", "/ttb/assets/*", "*.{png,jpg,jpeg,gif,svg,ico,css,js,map,txt,json,webmanifest}"]
+  }
+}
