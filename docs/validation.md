@@ -21,6 +21,12 @@ whitespace-normalized strings. Case-insensitivity makes "STONE'S THROW" vs
 "Stone's Throw" a 100 (Dave Morrison's example); token_sort forgives word-order
 differences in addresses and company suffixes.
 
+**Producer name qualifiers:** labels almost always qualify the producer ("Bottled
+by X", "Distilled and bottled by X", "Imported by X"). Standard qualifier phrases are
+stripped from both sides before scoring — otherwise nearly every real application
+WARNs on producer_name. The agent still sees the original transcription in the
+field-results table.
+
 **Missing fields:** extracted `null` with high confidence (the model is sure it's
 absent) → FAIL for required fields; `null` with low confidence → WARN.
 
@@ -36,7 +42,11 @@ absent) → FAIL for required fields; `null` with low confidence → WARN.
 - **government_warning** — validated against the statutory wording, not declared data.
   Order: confidence < 0.5 → WARN ("partially unreadable") → AI-notes formatting checks
   (title case / not all caps, not bold, small font → FAIL, *even when the wording
-  matches*) → whitespace-normalized exact match → PASS → otherwise FAIL.
+  matches*) → "GOVERNMENT WARNING:" prefix must be literally capitalized on the label
+  (catches title case directly) → **case-insensitive** whitespace-normalized wording
+  match → PASS → otherwise FAIL. The wording match is case-insensitive because the
+  statute requires capitals only for "GOVERNMENT WARNING:" — labels that print the
+  entire warning in capitals are compliant and must pass.
 
 ## Overall roll-up
 

@@ -13,7 +13,10 @@ from PIL import Image, UnidentifiedImageError
 from .prompts import SYSTEM_PROMPT
 
 MODEL = "claude-sonnet-4-6"
-REQUEST_TIMEOUT_SECONDS = 10.0
+# The spec's 10s proved too tight for real photographed labels (two dense
+# images regularly exceed it, surfacing as a false "service unavailable").
+# 18s x 2 attempts stays inside SWA's ~45s API gateway cap.
+REQUEST_TIMEOUT_SECONDS = 18.0
 MAX_DIMENSION = 2048
 JPEG_QUALITY = 85
 ALLOWED_FORMATS = {"JPEG", "PNG", "WEBP"}

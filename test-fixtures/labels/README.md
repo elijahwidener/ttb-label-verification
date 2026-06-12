@@ -15,8 +15,9 @@ the outcome the system is expected to produce.
 
   > GOVERNMENT WARNING: (1) According to the Surgeon General, women should not drink alcoholic beverages during pregnancy because of the risk of birth defects. (2) Consumption of alcoholic beverages impairs your ability to drive a car or operate machinery, and may cause health problems.
 
-  …in **all caps for "GOVERNMENT WARNING:"**, **bold**, at a font size
-  comparable to surrounding text.
+  …in **all caps for "GOVERNMENT WARNING:"**, **bold**, at a font size comparable to surrounding text.
+  (Printing the *entire* warning in capitals is also fine — the wording check is
+  case-insensitive; only the "GOVERNMENT WARNING:" prefix must be capitalized.)
 - Photograph/render straight-on, well lit, in focus (except rows 17–18).
 
 ## Per-application script

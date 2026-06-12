@@ -45,6 +45,26 @@ def fuzzy_score(declared: str, extracted: str) -> float:
     return max(fuzz.ratio(a, b), fuzz.token_sort_ratio(a, b))
 
 
+# Real labels almost always qualify the producer ("Bottled by X", "Distilled
+# and bottled by X"). The declared producer name rarely includes that phrase,
+# so strip standard qualifiers before comparing — otherwise nearly every
+# application WARNs on producer_name. The agent still sees the original
+# transcription in field_results.
+_PRODUCER_PREFIX_RE = re.compile(
+    r"^(?:(?:distilled|produced|bottled|brewed|made|crafted|imported|vinted|cellared|blended)"
+    r"(?:\s*(?:,|and|&)\s*(?:distilled|produced|bottled|brewed|made|crafted|imported|vinted|cellared|blended))*"
+    r"\s+by[:\s]+)",
+    re.IGNORECASE,
+)
+
+
+def strip_producer_qualifier(text: str | None) -> str | None:
+    if not text:
+        return text
+    stripped = _PRODUCER_PREFIX_RE.sub("", text).strip()
+    return stripped or text
+
+
 def _result(field, declared, extracted, confidence, status, reason):
     return {
         "field": field,
@@ -72,8 +92,9 @@ def _get_extracted(extraction: dict, field: str):
     return value, confidence, notes
 
 
-def _matrix_field(field, declared, value, confidence):
-    """Decision matrix (§11.1) for fuzzy-matched fields."""
+def _matrix_field(field, declared, value, confidence, compare_declared=None, compare_value=None):
+    """Decision matrix (§11.1) for fuzzy-matched fields. compare_* override the
+    strings used for scoring while declared/value stay in the result row."""
     label = FIELD_LABELS[field]
     if value is None:
         if confidence >= HIGH_CONFIDENCE:
@@ -84,7 +105,7 @@ def _matrix_field(field, declared, value, confidence):
     if confidence < HIGH_CONFIDENCE:
         return _result(field, declared, value, confidence, WARN,
                        f"The AI was not confident reading the {label.lower()}. An agent should check the label image.")
-    score = fuzzy_score(declared, value)
+    score = fuzzy_score(compare_declared or declared, compare_value or value)
     if score >= FUZZY_PASS_THRESHOLD:
         return _result(field, declared, value, confidence, PASS,
                        f"{label} matches the application.")
@@ -215,9 +236,18 @@ def _validate_government_warning(value, confidence, notes):
     if "small font" in notes_l or "smaller font" in notes_l:
         return _result(field, declared, value, confidence, FAIL,
                        "Warning text font size appears smaller than surrounding text.")
-    if _norm(value) == _norm(declared):
+    norm_extracted = _norm(value)
+    # The statute requires capitals for "GOVERNMENT WARNING:" specifically; the
+    # body has no case requirement (labels often print the whole warning in
+    # caps — that's compliant). So: prefix must be literally capitalized,
+    # wording is compared case-insensitively.
+    if (norm_extracted.casefold().startswith("government warning")
+            and not norm_extracted.startswith("GOVERNMENT WARNING")):
+        return _result(field, declared, value, confidence, FAIL,
+                       "GOVERNMENT WARNING: must be in all caps.")
+    if norm_extracted.casefold() == _norm(declared).casefold():
         return _result(field, declared, value, confidence, PASS,
-                       "Government warning matches the required wording exactly.")
+                       "Government warning matches the required wording.")
     return _result(field, declared, value, confidence, FAIL,
                    "Warning text does not match required wording.")
 
@@ -234,6 +264,12 @@ def validate(application_data: dict, extraction: dict) -> tuple[str, list[dict]]
             results.append(_validate_net_contents(declared, value, confidence))
         elif field == "country_of_origin":
             results.append(_validate_country(declared, value, confidence))
+        elif field == "producer_name":
+            results.append(_matrix_field(
+                field, declared, value, confidence,
+                compare_declared=strip_producer_qualifier(declared),
+                compare_value=strip_producer_qualifier(value),
+            ))
         else:
             results.append(_matrix_field(field, declared, value, confidence))
 
