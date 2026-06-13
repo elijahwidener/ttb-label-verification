@@ -46,19 +46,24 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     where_sql = ("WHERE " + " AND ".join(where)) if where else ""
 
     with get_conn() as conn:
-        total = conn.execute(
-            f"SELECT COUNT(*) AS n FROM applications {where_sql}", params
-        ).fetchone()["n"]
+        # Window-function total avoids a second COUNT round trip; the pending
+        # count rides along so the UI doesn't need a separate request for the
+        # queue badge (it's an index-only scan on idx_applications_pending).
         rows = conn.execute(
             f"""
-            SELECT * FROM applications {where_sql}
+            SELECT *, COUNT(*) OVER() AS _total FROM applications {where_sql}
             ORDER BY submitted_at ASC
             LIMIT %s OFFSET %s
             """,
             params + [limit, offset],
         ).fetchall()
+        total = rows[0]["_total"] if rows else 0
+        pending = conn.execute(
+            "SELECT COUNT(*) AS n FROM applications WHERE overall_status = 'WARN' AND decision IS NULL"
+        ).fetchone()["n"]
 
     return json_response({
         "applications": [serialize_application(r) for r in rows],
         "total": total,
+        "pending_count": pending,
     })

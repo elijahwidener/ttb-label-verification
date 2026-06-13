@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { listApplications } from '../api/client.js'
 import ReviewDrawer from '../components/ReviewDrawer.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
@@ -14,52 +14,64 @@ const POLL_MS = 30000
 
 export default function Review() {
   const [tab, setTab] = useState('pending')
-  const [apps, setApps] = useState([])
-  const [total, setTotal] = useState(0)
-  const [pendingCount, setPendingCount] = useState(0)
-  const [loading, setLoading] = useState(true)
+  // Per-tab cache: switching tabs shows cached data instantly while a
+  // background refresh runs (stale-while-revalidate). "Loading…" only ever
+  // appears for a tab that has never been fetched.
+  const [cache, setCache] = useState({})
+  const [pendingCount, setPendingCount] = useState(null)
   const [error, setError] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
+  const inflight = useRef(new Set())
 
-  const load = useCallback(async (activeTab) => {
-    setError(null)
+  const load = useCallback(async (key, { background = false } = {}) => {
+    if (inflight.current.has(key)) return
+    inflight.current.add(key)
+    if (!background) setError(null)
     try {
-      const params = TABS.find((t) => t.key === activeTab).params
+      const params = TABS.find((t) => t.key === key).params
       const res = await listApplications({ ...params, limit: 100 })
-      setApps(res.applications)
-      setTotal(res.total)
-      if (activeTab === 'pending') {
-        setPendingCount(res.total)
-      } else {
-        const pending = await listApplications({ status: 'WARN', decided: 'false', limit: 1 })
-        setPendingCount(pending.total)
-      }
+      setCache((c) => ({ ...c, [key]: res }))
+      if (res.pending_count !== undefined) setPendingCount(res.pending_count)
     } catch (err) {
-      setError(err.message)
+      if (!background) setError(err.message)
     } finally {
-      setLoading(false)
+      inflight.current.delete(key)
     }
   }, [])
 
+  const refreshAll = useCallback((activeKey) => {
+    load(activeKey, { background: !!cacheRef.current[activeKey] })
+    TABS.filter((t) => t.key !== activeKey).forEach((t) => load(t.key, { background: true }))
+  }, [load])
+
+  // keep a ref of cache for refreshAll without re-creating callbacks
+  const cacheRef = useRef(cache)
+  cacheRef.current = cache
+
   useEffect(() => {
-    setLoading(true)
-    load(tab)
-    const t = setInterval(() => load(tab), POLL_MS)
+    refreshAll(tab)
+    const t = setInterval(() => refreshAll(tab), POLL_MS)
     return () => clearInterval(t)
-  }, [tab, load])
+  }, [tab, refreshAll])
 
   function onDecided() {
     setSelectedId(null)
-    load(tab)
+    refreshAll(tab)
     toast('success', 'Decision saved', 'The application has been removed from the queue.')
   }
+
+  const data = cache[tab]
+  const apps = data?.applications ?? []
+  const total = data?.total ?? 0
+  const loading = !data
+  const badge = pendingCount ?? cache.pending?.total
 
   return (
     <div>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
         <h1 className="text-3xl font-bold">Application review</h1>
         <span className="bg-amber-100 text-amber-900 border border-amber-600 rounded-full px-4 py-2 font-bold">
-          ⚠ {pendingCount} waiting for review
+          ⚠ {badge ?? '…'} waiting for review
         </span>
       </div>
 
@@ -72,7 +84,7 @@ export default function Review() {
             className={`btn ${tab === t.key ? 'bg-blue-700 text-white' : 'bg-white border-2 border-slate-300 text-slate-800'}`}
             onClick={() => setTab(t.key)}
           >
-            {t.label}{t.key === 'pending' ? ` (${pendingCount})` : ''}
+            {t.label}{t.key === 'pending' && badge !== undefined && badge !== null ? ` (${badge})` : ''}
           </button>
         ))}
       </div>
