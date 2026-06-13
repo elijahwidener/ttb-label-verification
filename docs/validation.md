@@ -25,7 +25,8 @@ Co/Company, L.L.C./LLC) and street abbreviations (St/Street, Rd/Road, …). Then
 | AI confidence | Normalized comparison | Result |
 |---|---|---|
 | < 0.7 | (any) | WARN — AI uncertain, agent should look at the label |
-| ≥ 0.7 | identical after normalization (incl. word reorder) | PASS |
+| ≥ 0.7 | identical after normalization | PASS |
+| ≥ 0.7 | same words in a different **order** | FAIL — the label's wording differs; resubmit |
 | ≥ 0.7 | same words, one or more **misspelled** (typo signature) | FAIL — kicked back to submitter |
 | ≥ 0.7 | **structural** difference, fuzzy ≥ 60 | WARN — extra/missing word, abbreviation, acronym, different-but-related word |
 | ≥ 0.7 | broadly different, fuzzy < 60 | FAIL — confident mismatch |

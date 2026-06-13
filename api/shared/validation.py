@@ -108,7 +108,10 @@ def _is_pure_typo(nd: str, nv: str) -> bool:
 
 
 def _raw_fuzzy(a: str, b: str, token_set: bool = False) -> float:
-    score = max(fuzz.ratio(a, b), fuzz.token_sort_ratio(a, b))
+    # Order-sensitive on purpose: a reordering of the same words is a mismatch,
+    # not a match (and is caught explicitly upstream). token_set is used only
+    # for class_type's containment case ("Whiskey" ⊂ "Bourbon Whiskey").
+    score = fuzz.ratio(a, b)
     if token_set:
         score = max(score, fuzz.token_set_ratio(a, b))
     return score
@@ -194,15 +197,17 @@ def _matrix_field(field, declared, value, confidence, compare_declared=None,
     if nd == nv:
         return _result(field, declared, value, confidence, PASS,
                        f"{label} matches the application.")
-    # Same words, different order — still the same thing.
-    if sorted(nd.split()) == sorted(nv.split()):
-        return _result(field, declared, value, confidence, PASS,
-                       f"{label} matches the application.")
     # class_type only: a declared class fully contained in the label's more
     # specific designation ("Whiskey" ⊂ "Kentucky Straight Bourbon Whiskey").
     if token_set and fuzz.token_set_ratio(nd, nv) >= 100:
         return _result(field, declared, value, confidence, PASS,
                        f"{label} matches the application (the label is more specific).")
+    # Same words, different order — for a name or address that's a mismatch, not
+    # a match. (class_type is handled above and never reaches here.)
+    if sorted(nd.split()) == sorted(nv.split()):
+        return _result(field, declared, value, confidence, FAIL,
+                       f"{label} uses the same words in a different order than the application "
+                       f"('{declared}' vs '{value}'). Please match the label's wording and resubmit.")
     # Clear misspelling of the same words: a human can't approve a mismatched
     # spelling in an official record, so don't queue it — kick it back to the
     # submitter to correct. (class_type FAILs are demoted to WARN by the caller.)
