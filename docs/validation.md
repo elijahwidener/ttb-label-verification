@@ -21,6 +21,12 @@ whitespace-normalized strings. Case-insensitivity makes "STONE'S THROW" vs
 "Stone's Throw" a 100 (Dave Morrison's example); token_sort forgives word-order
 differences in addresses and company suffixes.
 
+**Class/type hierarchy:** class_type scoring additionally uses token_set_ratio, so a
+declared class that's contained in the label's more specific designation matches
+("Whiskey" vs "Kentucky Straight Bourbon Whiskey" → PASS — same class, more specific
+label). A would-be FAIL where one side is an acronym of the other ("IPA" vs "India
+Pale Ale") is demoted to WARN — a human should make that call, not auto-rejection.
+
 **Producer name qualifiers:** labels almost always qualify the producer ("Bottled
 by X", "Distilled and bottled by X", "Imported by X"). Standard qualifier phrases are
 stripped from both sides before scoring — otherwise nearly every real application
@@ -32,7 +38,8 @@ absent) → FAIL for required fields; `null` with low confidence → WARN.
 
 ## Field-specific rules
 
-- **alcohol_content** — regex-extract the first percentage from both strings; within
+- **alcohol_content** — regex-extract the first percentage from both strings (a bare
+  number like "45" also parses — the form submits just the percentage); within
   0.1 pp → PASS, beyond → FAIL, unparseable → FAIL, confidence < 0.6 → WARN.
 - **net_contents** — parse value+unit, convert cl/L/fl-oz to mL, compare within 1 mL;
   falls back to normalized string equality if either side doesn't parse; confidence

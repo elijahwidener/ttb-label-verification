@@ -11,7 +11,7 @@ export default function App() {
       <header className="bg-blue-900 text-white">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between flex-wrap gap-3">
           <Link to="/" className="text-xl font-bold min-h-[44px] flex items-center">
-            TTB Label Verification <span className="ml-2 text-sm font-normal text-blue-200">(prototype)</span>
+            TTB Label Verification
           </Link>
           <nav className="flex gap-2">
             <Link

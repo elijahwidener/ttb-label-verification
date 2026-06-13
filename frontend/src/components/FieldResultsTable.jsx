@@ -37,7 +37,9 @@ export default function FieldResultsTable({ fields, compact = false }) {
             <tr key={f.field} className="border-t border-slate-200 align-top">
               <td className="px-4 py-3 font-semibold whitespace-nowrap">{FIELD_LABELS[f.field] || f.field}</td>
               <td className="px-4 py-3 max-w-xs break-words">
-                {f.field === 'government_warning' ? <span className="text-slate-500 text-sm">(required federal wording)</span> : cellText(f.declared)}
+                {f.field === 'government_warning'
+                  ? <span className="text-slate-600 text-xs leading-snug block">{f.declared}</span>
+                  : cellText(f.declared)}
               </td>
               <td className="px-4 py-3 max-w-xs break-words">{cellText(f.extracted)}</td>
               <td className="px-4 py-3"><StatusBadge status={f.status} /></td>

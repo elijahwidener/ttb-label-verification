@@ -38,11 +38,17 @@ def _fold(text: str) -> str:
     return _norm(text).casefold()
 
 
-def fuzzy_score(declared: str, extracted: str) -> float:
+def fuzzy_score(declared: str, extracted: str, token_set: bool = False) -> float:
     """Case-insensitive, whitespace-normalized. ratio catches near-identical
-    strings; token_sort_ratio forgives word order (addresses, 'LLC' placement)."""
+    strings; token_sort_ratio forgives word order (addresses, 'LLC' placement).
+    token_set additionally treats containment as a match — used for class_type,
+    where declared 'Whiskey' against a label's 'Kentucky Straight Bourbon
+    Whiskey' is the same class, just more specific on the label."""
     a, b = _fold(declared), _fold(extracted)
-    return max(fuzz.ratio(a, b), fuzz.token_sort_ratio(a, b))
+    score = max(fuzz.ratio(a, b), fuzz.token_sort_ratio(a, b))
+    if token_set:
+        score = max(score, fuzz.token_set_ratio(a, b))
+    return score
 
 
 # Real labels almost always qualify the producer ("Bottled by X", "Distilled
@@ -63,6 +69,13 @@ def strip_producer_qualifier(text: str | None) -> str | None:
         return text
     stripped = _PRODUCER_PREFIX_RE.sub("", text).strip()
     return stripped or text
+
+
+def _is_acronym(short: str, long: str) -> bool:
+    """True when `short` is the initials of multi-word `long` (IPA / India Pale Ale)."""
+    s = re.sub(r"[^a-z]", "", (short or "").casefold())
+    words = re.findall(r"[a-z]+", (long or "").casefold())
+    return len(words) >= 2 and len(s) == len(words) and s == "".join(w[0] for w in words)
 
 
 def _result(field, declared, extracted, confidence, status, reason):
@@ -92,7 +105,8 @@ def _get_extracted(extraction: dict, field: str):
     return value, confidence, notes
 
 
-def _matrix_field(field, declared, value, confidence, compare_declared=None, compare_value=None):
+def _matrix_field(field, declared, value, confidence, compare_declared=None,
+                  compare_value=None, token_set=False):
     """Decision matrix (§11.1) for fuzzy-matched fields. compare_* override the
     strings used for scoring while declared/value stay in the result row."""
     label = FIELD_LABELS[field]
@@ -105,7 +119,7 @@ def _matrix_field(field, declared, value, confidence, compare_declared=None, com
     if confidence < HIGH_CONFIDENCE:
         return _result(field, declared, value, confidence, WARN,
                        f"The AI was not confident reading the {label.lower()}. An agent should check the label image.")
-    score = fuzzy_score(compare_declared or declared, compare_value or value)
+    score = fuzzy_score(compare_declared or declared, compare_value or value, token_set=token_set)
     if score >= FUZZY_PASS_THRESHOLD:
         return _result(field, declared, value, confidence, PASS,
                        f"{label} matches the application.")
@@ -123,6 +137,10 @@ def parse_abv(text: str | None) -> float | None:
     if not text:
         return None
     m = _ABV_RE.search(text)
+    if m:
+        return float(m.group(1))
+    # Bare number ("45", "13.5") — the form asks for just the percentage.
+    m = re.fullmatch(r"\s*(\d+(?:\.\d+)?)\s*", text)
     return float(m.group(1)) if m else None
 
 
@@ -258,7 +276,15 @@ def validate(application_data: dict, extraction: dict) -> tuple[str, list[dict]]
     for field in ALL_APPLICATION_FIELDS:
         declared = application_data.get(field) or ""
         value, confidence, _notes = _get_extracted(extraction, field)
-        if field == "alcohol_content":
+        if field == "class_type":
+            r = _matrix_field(field, declared, value, confidence, token_set=True)
+            # "IPA" vs "India Pale Ale": an acronym of the other side is not a
+            # confident mismatch — a human should make that call.
+            if r["status"] == FAIL and value and (_is_acronym(declared, value) or _is_acronym(value, declared)):
+                r = _result(field, declared, value, confidence, WARN,
+                            "Class / type on the label looks like an abbreviation of the declared class. An agent should confirm they mean the same thing.")
+            results.append(r)
+        elif field == "alcohol_content":
             results.append(_validate_alcohol(declared, value, confidence))
         elif field == "net_contents":
             results.append(_validate_net_contents(declared, value, confidence))

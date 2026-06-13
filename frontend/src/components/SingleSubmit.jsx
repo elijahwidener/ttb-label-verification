@@ -12,22 +12,28 @@ import { toast } from './Toaster.jsx'
 const EMPTY_FORM = {
   brand_name: '',
   class_type: '',
-  alcohol_content: '',
-  net_contents: '',
+  alcohol_percent: '',
+  net_value: '',
+  net_unit: 'mL',
   producer_name: '',
   producer_address: '',
   country_of_origin: '',
 }
 
-const FORM_FIELDS = [
-  { key: 'brand_name', label: 'Brand name', required: true, placeholder: 'Old Tom Distillery' },
-  { key: 'class_type', label: 'Class / type', required: true, placeholder: 'Kentucky Straight Bourbon Whiskey' },
-  { key: 'alcohol_content', label: 'Alcohol content', required: true, placeholder: '45% Alc./Vol. (90 Proof)' },
-  { key: 'net_contents', label: 'Net contents', required: true, placeholder: '750 mL' },
-  { key: 'producer_name', label: 'Producer name', required: true, placeholder: 'Old Tom Distillery LLC' },
-  { key: 'producer_address', label: 'Producer address', required: true, placeholder: '123 Bourbon St, Louisville, KY 40201' },
+const NET_UNITS = ['mL', 'cL', 'L', 'fl oz']
+
+// Text fields rendered by the generic loop; alcohol content and net contents
+// get dedicated inputs (a percentage box and a number + unit dropdown).
+const TEXT_FIELDS_TOP = [
+  { key: 'brand_name', label: 'Brand name', required: true, placeholder: 'The brand name shown on the label' },
+  { key: 'class_type', label: 'Class / type', required: true, placeholder: 'What kind of beverage it is' },
+]
+const TEXT_FIELDS_BOTTOM = [
+  { key: 'producer_name', label: 'Producer name', required: true, placeholder: 'The company that produces or bottles it' },
+  { key: 'producer_address', label: 'Producer address', required: true, placeholder: 'The address printed on the label' },
   { key: 'country_of_origin', label: 'Country of origin (only for imports)', required: false, placeholder: 'Leave blank for U.S. products' },
 ]
+const REQUIRED_KEYS = ['brand_name', 'class_type', 'alcohol_percent', 'net_value', 'producer_name', 'producer_address']
 
 export default function SingleSubmit() {
   const [form, setForm] = useState(EMPTY_FORM)
@@ -42,7 +48,7 @@ export default function SingleSubmit() {
   const [overrideBusy, setOverrideBusy] = useState(false)
   const [overrideDone, setOverrideDone] = useState(false)
 
-  const formComplete = FORM_FIELDS.filter((f) => f.required).every((f) => form[f.key].trim())
+  const formComplete = REQUIRED_KEYS.every((k) => form[k].trim())
   const canSubmit = formComplete && frontFile && backFile && !phase
 
   async function handleSubmit() {
@@ -65,7 +71,15 @@ export default function SingleSubmit() {
       const res = await submitApplication({
         front_blob_url: front,
         back_blob_url: back,
-        application_data: { ...form, country_of_origin: form.country_of_origin.trim() || null },
+        application_data: {
+          brand_name: form.brand_name.trim(),
+          class_type: form.class_type.trim(),
+          alcohol_content: `${form.alcohol_percent.trim()}%`,
+          net_contents: `${form.net_value.trim()} ${form.net_unit}`,
+          producer_name: form.producer_name.trim(),
+          producer_address: form.producer_address.trim(),
+          country_of_origin: form.country_of_origin.trim() || null,
+        },
       })
       setResult(res)
       toast(res.notification.level, res.notification.title, '')
@@ -172,7 +186,70 @@ export default function SingleSubmit() {
       <section>
         <h2 className="text-xl font-bold mb-3">Step 2 — Tell us what the label should say</h2>
         <div className="grid sm:grid-cols-2 gap-4 bg-white rounded-xl border border-slate-300 p-6">
-          {FORM_FIELDS.map((f) => (
+          {TEXT_FIELDS_TOP.map((f) => (
+            <div key={f.key}>
+              <label className="label" htmlFor={`field-${f.key}`}>
+                {f.label} {f.required && <span className="text-red-700">*</span>}
+              </label>
+              <input
+                id={`field-${f.key}`}
+                className="input"
+                value={form[f.key]}
+                placeholder={f.placeholder}
+                onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+              />
+            </div>
+          ))}
+
+          <div>
+            <label className="label" htmlFor="field-alcohol">
+              Alcohol content <span className="text-red-700">*</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                id="field-alcohol"
+                className="input"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                max="100"
+                step="0.1"
+                value={form.alcohol_percent}
+                placeholder="e.g. 45"
+                onChange={(e) => setForm({ ...form, alcohol_percent: e.target.value })}
+              />
+              <span className="font-semibold text-slate-700 whitespace-nowrap">% Alc./Vol.</span>
+            </div>
+          </div>
+
+          <div>
+            <label className="label" htmlFor="field-net">
+              Net contents <span className="text-red-700">*</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                id="field-net"
+                className="input"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="any"
+                value={form.net_value}
+                placeholder="e.g. 750"
+                onChange={(e) => setForm({ ...form, net_value: e.target.value })}
+              />
+              <select
+                aria-label="Net contents unit"
+                className="input w-auto"
+                value={form.net_unit}
+                onChange={(e) => setForm({ ...form, net_unit: e.target.value })}
+              >
+                {NET_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {TEXT_FIELDS_BOTTOM.map((f) => (
             <div key={f.key} className={f.key === 'producer_address' ? 'sm:col-span-2' : ''}>
               <label className="label" htmlFor={`field-${f.key}`}>
                 {f.label} {f.required && <span className="text-red-700">*</span>}
