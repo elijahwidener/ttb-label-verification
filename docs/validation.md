@@ -25,18 +25,32 @@ Co/Company, L.L.C./LLC) and street abbreviations (St/Street, Rd/Road, …). Then
 | AI confidence | Normalized comparison | Result |
 |---|---|---|
 | < 0.7 | (any) | WARN — AI uncertain, agent should look at the label |
-| ≥ 0.7 | identical after normalization | PASS |
-| ≥ 0.7 | differ, fuzzy ≥ 60 | WARN — real difference beyond formatting (typo or possibly a different entity) |
-| ≥ 0.7 | differ, fuzzy < 60 | FAIL — confident mismatch |
+| ≥ 0.7 | identical after normalization (incl. word reorder) | PASS |
+| ≥ 0.7 | same words, one or more **misspelled** (typo signature) | FAIL — kicked back to submitter |
+| ≥ 0.7 | **structural** difference, fuzzy ≥ 60 | WARN — extra/missing word, abbreviation, acronym, different-but-related word |
+| ≥ 0.7 | broadly different, fuzzy < 60 | FAIL — confident mismatch |
 
-This is the key distinction: PASS requires an **exact match once style is stripped**, so
-"STONE'S THROW" vs "Stone's Throw" and "Old Tom Distillery LLC" vs "Old Tom Distillery,
-L.L.C." pass, but a genuine spelling difference like "Harrow Peak Wnery" vs "Harrow Peak
-Winery" does **not** silently pass — it's WARN, because it could be a typo or a different
-producer, and only a human can tell. The interviews described fuzzy matching as being for
-casing/punctuation, not spelling; this matrix encodes exactly that. Fuzzy score
-(`max(ratio, token_sort_ratio)` on the normalized strings) is used only to split WARN
-from FAIL.
+The design principle: **WARN is for differences a human could reasonably approve**
+(abbreviations, acronyms, an extra word, a class that's more specific on the label). A
+plain misspelling is not approvable as a match in an official record, so it's a FAIL the
+submitter fixes and resubmits — no agent time wasted on it. Style is forgiven entirely
+(PASS): "STONE'S THROW" vs "Stone's Throw", "Old Tom Distillery LLC" vs "...L.L.C.".
+
+**Telling a typo from a different word** (the FAIL-vs-WARN split) is done on the
+normalized token lists, not raw edit distance:
+
+- Different token count (a whole word added/dropped) → structural → WARN.
+- Same count, every differing token is a near-miss of its counterpart (`_is_typo_pair`:
+  both ≥ 4 chars, same first letter, Levenshtein ≤ 2) → typo → FAIL.
+- Same count but a differing token is a genuinely different word → fuzzy magnitude splits
+  WARN (≥ 60, related) from FAIL (< 60, unrelated).
+
+Consequences worth knowing: the "both ≥ 4 chars" rule keeps short variants like
+"Olde"/"Old" in WARN rather than auto-rejecting them; a legitimate one-letter *variant*
+of a long proper noun (e.g. "Grey"/"Gray" inside a name) will be auto-rejected as a typo
+— accepted tradeoff, recoverable via the submitter override. class_type FAILs (incl.
+typo-FAILs like "Whisky"/"Whiskey") are demoted to WARN by the caller, since class never
+auto-rejects.
 
 **Class/type hierarchy:** class_type scoring additionally uses token_set_ratio, so a
 declared class lexically contained in the label's more specific designation matches

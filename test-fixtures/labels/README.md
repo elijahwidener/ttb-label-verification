@@ -6,10 +6,6 @@ filenames must exactly match the `front_filename` / `back_filename` columns in
 the outcome the system is expected to produce.
 
 ## Conventions for every image
-
-- **Front label** shows: brand name, class/type, alcohol content, net contents.
-- **Back label** shows: the government warning, producer name and address, and
-  country of origin (imports only).
 - Unless a row says otherwise, render every value **exactly as it appears in
   the CSV row** and render the government warning **exactly** as:
 
@@ -53,8 +49,4 @@ the outcome the system is expected to produce.
 
 ## Generation tips
 
-These don't need to be photographs of real bottles — flat rendered label
-images (e.g., generated graphics) work, as long as the text is legible and the
-deviations above are faithfully reproduced. For rows 17–18 the defect must be
-severe enough that a human couldn't read the affected text either; mild blur
-will (correctly) come back as usable-with-low-confidence instead of rejected.
+These don't all need to be photographs of real bottles — flat rendered label images (e.g., generated graphics) work, as long as the text is legible and the deviations above are faithfully reproduced. For rows 17–18 the defect must be severe enough that a human couldn't read the affected text either; mild blur will (correctly) come back as usable-with-low-confidence instead of rejected.

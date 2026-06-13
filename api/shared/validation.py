@@ -8,6 +8,7 @@ interviews and need empirical tuning (see docs/validation.md)."""
 import re
 
 from rapidfuzz import fuzz
+from rapidfuzz.distance import Levenshtein
 
 from .models import ALL_APPLICATION_FIELDS, FIELD_LABELS, VALIDATED_FIELDS
 
@@ -84,6 +85,26 @@ def normalize_for_match(text: str | None) -> str:
     t = re.sub(r"[.,'’\"]", "", t)
     t = re.sub(r"[^a-z0-9]+", " ", t)
     return " ".join(_CANON.get(tok, tok) for tok in t.split())
+
+
+def _is_typo_pair(a: str, b: str) -> bool:
+    """True when two differing tokens look like a misspelling of the SAME word
+    (vs. two genuinely different words). Heuristics: both ≥4 chars (short tokens
+    are too ambiguous to auto-reject), same first letter (typos rarely change
+    it; different words usually start differently), edit distance ≤ 2."""
+    if len(a) < 4 or len(b) < 4 or a[0] != b[0]:
+        return False
+    return Levenshtein.distance(a, b) <= 2
+
+
+def _is_pure_typo(nd: str, nv: str) -> bool:
+    """The two normalized strings are the same words except one or more are
+    misspelled — no words added, dropped, or swapped for different words."""
+    dt, vt = nd.split(), nv.split()
+    if len(dt) != len(vt):
+        return False  # a whole word added/removed -> structural, not a typo
+    diffs = [(d, v) for d, v in zip(dt, vt) if d != v]
+    return bool(diffs) and all(_is_typo_pair(d, v) for d, v in diffs)
 
 
 def _raw_fuzzy(a: str, b: str, token_set: bool = False) -> float:
@@ -173,17 +194,29 @@ def _matrix_field(field, declared, value, confidence, compare_declared=None,
     if nd == nv:
         return _result(field, declared, value, confidence, PASS,
                        f"{label} matches the application.")
+    # Same words, different order — still the same thing.
+    if sorted(nd.split()) == sorted(nv.split()):
+        return _result(field, declared, value, confidence, PASS,
+                       f"{label} matches the application.")
     # class_type only: a declared class fully contained in the label's more
     # specific designation ("Whiskey" ⊂ "Kentucky Straight Bourbon Whiskey").
     if token_set and fuzz.token_set_ratio(nd, nv) >= 100:
         return _result(field, declared, value, confidence, PASS,
                        f"{label} matches the application (the label is more specific).")
+    # Clear misspelling of the same words: a human can't approve a mismatched
+    # spelling in an official record, so don't queue it — kick it back to the
+    # submitter to correct. (class_type FAILs are demoted to WARN by the caller.)
+    if _is_pure_typo(nd, nv):
+        return _result(field, declared, value, confidence, FAIL,
+                       f"{label} does not match the label: the application says '{declared}' but "
+                       f"the label reads '{value}', which looks like a spelling difference. "
+                       f"Please correct the application and resubmit.")
     score = _raw_fuzzy(nd, nv, token_set=token_set)
     if score >= FUZZY_FAIL_THRESHOLD:
         return _result(field, declared, value, confidence, WARN,
                        f"{label} on the label differs from the application beyond formatting "
-                       f"(similarity {int(score)}/100) — this could be a typo or a different entity. "
-                       f"An agent should confirm they are the same.")
+                       f"(similarity {int(score)}/100) — for example an extra word, an abbreviation, "
+                       f"or different wording. An agent should confirm they describe the same thing.")
     return _result(field, declared, value, confidence, FAIL,
                    f"{label} on the label does not match the application (similarity {int(score)}/100).")
 
