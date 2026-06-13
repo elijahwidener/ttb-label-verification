@@ -1,21 +1,21 @@
 front_filename,back_filename,brand_name,class_type,alcohol_content,net_contents,producer_name,producer_address,country_of_origin
-app01-front.jpg,app01-back.jpg,Old Tom Distillery,Kentucky Straight Bourbon Whiskey,45% Alc./Vol. (90 Proof),750 mL,Old Tom Distillery LLC,"123 Bourbon St, Louisville, KY 40201",
-app02-front.jpg,app02-back.jpg,Cedar Ridge Vineyards,Cabernet Sauvignon,13.5% Alc./Vol.,750 mL,Cedar Ridge Vineyards Inc.,"410 Valley Rd, Napa, CA 94558",
-app03-front.jpg,app03-back.jpg,Ironworks Brewing,India Pale Ale,6.8% Alc./Vol.,355 mL,Ironworks Brewing Company,"88 Foundry Ave, Pittsburgh, PA 15201",
-app04-front.jpg,app04-back.jpg,Bluewater Rum Co.,Gold Rum,40% Alc./Vol. (80 Proof),750 mL,Bluewater Rum Company Ltd.,"7 Harbor Way, Bridgetown",Barbados
-app05-front.jpg,app05-back.jpg,Sierra Pine Spirits,American Single Malt Whiskey,46% Alc./Vol.,750 mL,Sierra Pine Spirits LLC,"2200 Timber Ln, Truckee, CA 96161",
-app06-front.jpg,app06-back.jpg,Maison Verte,Brut Sparkling Wine,12% Alc./Vol.,750 mL,Maison Verte S.A.,"14 Rue des Vignes, Epernay",France
-app07-front.jpg,app07-back.jpg,Copper Kettle,Straight Rye Whiskey,50% Alc./Vol. (100 Proof),375 mL,Copper Kettle Distillers,"5 Mill Race Rd, Lawrenceburg, IN 47025",
-app08-front.jpg,app08-back.jpg,Harvest Moon Cidery,Hard Apple Cider,5.5% Alc./Vol.,473 mL,Harvest Moon Cidery LLC,"31 Orchard Hill Rd, Geneva, NY 14456",
-app09-front.jpg,app09-back.jpg,Stone's Throw,London Dry Gin,47% Alc./Vol. (94 Proof),750 mL,Stone's Throw Distilling LLC,"902 Quarry St, Portland, OR 97209",
-app10-front.jpg,app10-back.jpg,Old Tom Distillery,Kentucky Straight Bourbon Whiskey,45% Alc./Vol. (90 Proof),750 mL,Old Tom Distillery LLC,"123 Bourbon St, Louisville, KY 40201",
-app11-front.jpg,app11-back.jpg,Ironworks Brewing,India Pale Ale,6.8% Alc./Vol.,355 mL,Ironworks Brewing Company,"88 Foundry Ave, Pittsburgh, PA 15201",
-app12-front.jpg,app12-back.jpg,Sierra Pine Spirits,American Single Malt Whiskey,46% Alc./Vol.,750 mL,Sierra Pine Spirits LLC,"2200 Timber Ln, Truckee, CA 96161",
-app13-front.jpg,app13-back.jpg,Cedar Ridge Vineyards,Cabernet Sauvignon,13.5% Alc./Vol.,750 mL,Cedar Ridge Vineyards Inc.,"410 Valley Rd, Napa, CA 94558",
-app14-front.jpg,app14-back.jpg,Copper Kettle,Straight Rye Whiskey,50% Alc./Vol. (100 Proof),375 mL,Copper Kettle Distillers,"5 Mill Race Rd, Lawrenceburg, IN 47025",
-app15-front.jpg,app15-back.jpg,Bluewater Rum Co.,Gold Rum,40% Alc./Vol. (80 Proof),750 mL,Bluewater Rum Company Ltd.,"7 Harbor Way, Bridgetown",Barbados
-app16-front.jpg,app16-back.jpg,Maison Verte,Brut Sparkling Wine,12% Alc./Vol.,750 mL,Maison Verte S.A.,"14 Rue des Vignes, Epernay",France
-app17-front.jpg,app17-back.jpg,Harvest Moon Cidery,Hard Apple Cider,5.5% Alc./Vol.,473 mL,Harvest Moon Cidery LLC,"31 Orchard Hill Rd, Geneva, NY 14456",
-app18-front.jpg,app18-back.jpg,Stone's Throw,London Dry Gin,47% Alc./Vol. (94 Proof),750 mL,Stone's Throw Distilling LLC,"902 Quarry St, Portland, OR 97209",
-app19-front.jpg,app19-back.jpg,Old Tom Distillery,Kentucky Straight Bourbon Whiskey,45% Alc./Vol. (90 Proof),750 mL,Old Tom Distillery LLC,"123 Bourbon St, Louisville, KY 40201",
-app20-front.jpg,app20-back.jpg,Ironworks Brewing,India Pale Ale,6.8% Alc./Vol.,355 mL,Ironworks Brewing Company,"88 Foundry Ave, Pittsburgh, PA 15201",
+application-1-front.png,application-1-back.png,Copper Still Distilling Co.,Kentucky Straight Bourbon Whiskey,45% Alc./Vol. (90 Proof),750 mL,Copper Still Distilling Co. LLC,"412 Barrel House Road, Bardstown, KY 40004",
+application-2-front.png,application-2-back.png,Harrow Peak,California Cabernet Sauvignon,13.5% Alc./Vol.,750 mL,Harrow Peak Winery,"1880 Silverado Trail, St. Helena, CA 94574",
+application-3-front.png,application-3-back.png,Valle Dorado,Beer,4.8% Alc./Vol.,355 mL,Cervecería Valle Dorado S.A.,"Av. Industrial 340, Monterrey, N.L., México 64000",Mexico
+application-4-front.png,application-4-back.png,Iron Gate Brewing,American Pale Ale,5.2% Alc./Vol.,355 mL,Iron Gate Brewing Inc.,"55 Canal Street, Portland, ME 04101",
+application-5-front.png,application-5-back.png,Smoky Hollow,Whiskey,50% Alc./Vol. (100 Proof),750 mL,Smoky Hollow Distillers LLC,"9 Ridge Rd, Asheville, NC 28801",
+application-6-front.png,application-6-back.png,Northwind,London Dry Gin,47% Alc./Vol.,75 cL,Northwind Spirits LLC,"200 Harbor Blvd, Seattle, WA 98101",
+application-7-front.png,application-7-back.png,Clachan Mor,Single Malt Scotch Whisky,43% Alc./Vol.,700 mL,Clachan Mor Distillery Ltd.,"Speyside, Scotland",Scotland
+application-8-front.png,application-8-back.png,Stone's Throw,Straight Rye Whiskey,47% Alc./Vol.,375 mL,Stone's Throw Distilling LLC,"902 Quarry St, Portland, OR 97209",
+application-9-front.png,application-9-back.png,Cedar Ridge,Cabernet Sauvignon,13.5% Alc./Vol.,750 mL,Cedar Ridge Vinyards Inc.,"410 Valley Rd, Napa, CA 94558",
+application-10-front.png,application-10-back.png,Riverside Cellars,Pinot Noir,13% Alc./Vol.,750 mL,Riverside Cellars Winery,"88 River Rd, Dundee, OR 97115",
+application-11-front.png,application-11-back.png,Old Tom,London Dry Gin,45% Alc./Vol.,750 mL,Old Tom Distillery LLC,"123 Bourbon St, Louisville, KY 40201",
+application-12-front.png,application-12-back.png,Ironworks,India Pale Ale,6.8% Alc./Vol.,355 mL,Ironworks Brewing Company,"88 Foundry Ave, Pittsburgh, PA 15201",
+application-13-front.png,application-13-back.png,Maison Verte,Wine,12% Alc./Vol.,750 mL,Maison Verte,"14 Rue des Vignes, Épernay, France",France
+application-14-front.png,application-14-back.png,Sierra Pine,American Single Malt Whiskey,46% Alc./Vol.,750 mL,Sierra Pine Spirits LLC,"2200 Timber Ln, Truckee, CA 96161",
+application-15-front.png,application-15-back.png,Harvest Moon,Hard Apple Cider,5.5% Alc./Vol.,750 mL,Harvest Moon Cidery LLC,"31 Orchard Hill Rd, Geneva, NY 14456",
+application-16-front.png,application-16-back.png,Bluewater Rum Co.,Gold Rum,40% Alc./Vol. (80 Proof),750 mL,Bluewater Rum Company Ltd.,"7 Harbor Way, Bridgetown",Barbados
+application-17-front.png,application-17-back.png,Glacier Bay,Vodka,40% Alc./Vol.,750 mL,Glacier Bay Distillery LLC,"14 Tundra Way, Anchorage, AK 99501",
+application-18-front.png,application-18-back.png,Crimson Oak,Straight Bourbon Whiskey,50% Alc./Vol. (100 Proof),750 mL,Crimson Oak Distillery LLC,"5 Mill Race Rd, Lawrenceburg, KY 40342",
+application-19-front.png,application-19-back.png,Fjord,Aquavit,42% Alc./Vol.,500 mL,Fjord Spirits AS,"Storgata 12, Oslo",
+application-20-front.png,application-20-back.png,Lantern Hill,Saison,6.0% Alc./Vol.,355 mL,Lantern Hill Brewing Co.,"70 Beacon St, Boston, MA 02108",

@@ -1,12 +1,18 @@
 # Test Fixtures
 
-## Case 1 — Copper Still Bourbon → PASS
-All fields match exactly. Correct government warning (bold, all caps).
+The full 20-case test plan — declared data, per-case label deviations, and expected
+PASS/WARN/FAIL outcomes — lives in **[labels/README.md](labels/README.md)**.
 
-## Case 2 — Harrow Peak Wine → FAIL
-Government warning is title case and not bold. Per spec, both are hard FAILs.
-Use this to test the auto-rejection flow and the submitter override modal.
+- `application-N-front.png` / `application-N-back.png` — label images (N = 1–20).
+  Cases 1–3 exist; 4–20 are to be created per the spec.
+- `application-N.json` — declared application data for single-submission testing.
+- `batch-sample.csv` — the same 20 cases for batch-upload testing (declared data +
+  matching filenames).
 
-## Case 3 — Valle Dorado Beer → WARN
-Label photo is slightly angled and glare on back photo. Expect Claude to return low confidence on some fields,
-triggering WARN. Also tests country of origin (Mexico). 
+Quick reference for the three originals:
+
+- **Case 1 — Copper Still Bourbon → PASS.** All fields match; warning bold + all caps.
+- **Case 2 — Harrow Peak Wine → FAIL.** Warning is title case and not bold. Use to test
+  the auto-rejection flow and the submitter override modal.
+- **Case 3 — Valle Dorado Beer → WARN.** Slightly angled with glare → low confidence on
+  some fields. Also exercises country of origin (Mexico).
