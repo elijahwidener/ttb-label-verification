@@ -5,27 +5,46 @@ extracted value against the declared application data and produces an auditable
 PASS / WARN / FAIL per field with a plain-language reason. WARN is the only state that
 reaches a human.
 
-## Decision matrix — fuzzy fields
+## Two axes: extraction confidence vs match quality
+
+These are kept separate by design:
+
+1. **AI confidence** — how sure the model is it *read the label correctly*. Below 0.7
+   → WARN regardless of match (the agent should look at the image).
+2. **Match quality** — whether the trusted extracted text *means the same* as what was
+   declared. This is strict on spelling/content but forgiving on **style**.
+
+## Decision matrix — text fields
 
 (brand_name, class_type, producer_name, producer_address, country_of_origin)
 
-| AI confidence | Fuzzy score | Result |
-|---|---|---|
-| ≥ 0.7 | ≥ 90 | PASS |
-| ≥ 0.7 | 60–89 | WARN — borderline match, agent should review |
-| ≥ 0.7 | < 60 | FAIL — confident mismatch |
-| < 0.7 | any | WARN — AI uncertain, agent should look at the label |
+Matching first **normalizes style away** (`normalize_for_match`): lowercase, `&`→`and`,
+drop apostrophes/periods/commas, canonicalize corporate suffixes (Inc/Incorporated,
+Co/Company, L.L.C./LLC) and street abbreviations (St/Street, Rd/Road, …). Then:
 
-Fuzzy score = `max(ratio, token_sort_ratio)` (rapidfuzz) on casefolded,
-whitespace-normalized strings. Case-insensitivity makes "STONE'S THROW" vs
-"Stone's Throw" a 100 (Dave Morrison's example); token_sort forgives word-order
-differences in addresses and company suffixes.
+| AI confidence | Normalized comparison | Result |
+|---|---|---|
+| < 0.7 | (any) | WARN — AI uncertain, agent should look at the label |
+| ≥ 0.7 | identical after normalization | PASS |
+| ≥ 0.7 | differ, fuzzy ≥ 60 | WARN — real difference beyond formatting (typo or possibly a different entity) |
+| ≥ 0.7 | differ, fuzzy < 60 | FAIL — confident mismatch |
+
+This is the key distinction: PASS requires an **exact match once style is stripped**, so
+"STONE'S THROW" vs "Stone's Throw" and "Old Tom Distillery LLC" vs "Old Tom Distillery,
+L.L.C." pass, but a genuine spelling difference like "Harrow Peak Wnery" vs "Harrow Peak
+Winery" does **not** silently pass — it's WARN, because it could be a typo or a different
+producer, and only a human can tell. The interviews described fuzzy matching as being for
+casing/punctuation, not spelling; this matrix encodes exactly that. Fuzzy score
+(`max(ratio, token_sort_ratio)` on the normalized strings) is used only to split WARN
+from FAIL.
 
 **Class/type hierarchy:** class_type scoring additionally uses token_set_ratio, so a
-declared class that's contained in the label's more specific designation matches
+declared class lexically contained in the label's more specific designation matches
 ("Whiskey" vs "Kentucky Straight Bourbon Whiskey" → PASS — same class, more specific
-label). A would-be FAIL where one side is an acronym of the other ("IPA" vs "India
-Pale Ale") is demoted to WARN — a human should make that call, not auto-rejection.
+label). **class_type never auto-rejects:** the system models no beverage-type taxonomy
+(out of scope), so it can't safely call a class mismatch wrong — a generic "Wine" vs a
+specific "Cabernet Sauvignon" has no lexical overlap, and "IPA" vs "India Pale Ale" is
+an abbreviation. Any class mismatch is therefore WARN (human confirms), never FAIL.
 
 **Producer name qualifiers:** labels almost always qualify the producer ("Bottled
 by X", "Distilled and bottled by X", "Imported by X"). Standard qualifier phrases are

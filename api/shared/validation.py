@@ -18,7 +18,10 @@ GOVERNMENT_WARNING_REQUIRED = (
     "operate machinery, and may cause health problems."
 )
 
-FUZZY_PASS_THRESHOLD = 90
+# Text fields PASS only on an exact match after style normalization (see
+# normalize_for_match). Fuzzy scoring on the normalized strings then separates
+# WARN (≥60: real but small difference — typo or possibly different entity,
+# human judgment) from FAIL (<60: confident mismatch).
 FUZZY_FAIL_THRESHOLD = 60
 HIGH_CONFIDENCE = 0.7          # matrix boundary for fuzzy-matched fields (§11.1)
 CONFIDENCE_WARN_THRESHOLD = 0.6  # boundary for alcohol_content / net_contents (§11.2)
@@ -38,17 +41,61 @@ def _fold(text: str) -> str:
     return _norm(text).casefold()
 
 
-def fuzzy_score(declared: str, extracted: str, token_set: bool = False) -> float:
-    """Case-insensitive, whitespace-normalized. ratio catches near-identical
-    strings; token_sort_ratio forgives word order (addresses, 'LLC' placement).
-    token_set additionally treats containment as a match — used for class_type,
-    where declared 'Whiskey' against a label's 'Kentucky Straight Bourbon
-    Whiskey' is the same class, just more specific on the label."""
-    a, b = _fold(declared), _fold(extracted)
+# Two-axis model: the AI's `confidence` says how sure we are we READ the label
+# right; the match step then asks whether the (trusted) text MEANS the same as
+# what was declared. Matching must be strict on spelling/content but forgiving
+# on *style* — case, punctuation, &/and, corporate suffixes (Inc/Incorporated),
+# street abbreviations (St/Street). So we normalize style away explicitly, then
+# require an EXACT match for PASS. A real textual difference that survives
+# normalization (e.g. "Wnery" vs "Winery" — a typo, or a different entity) is
+# NOT auto-passed; fuzzy scoring only separates WARN from FAIL after that.
+
+# Each variant maps to one canonical token (whole-token replacement only).
+_CANON = {
+    "incorporated": "inc", "inc": "inc",
+    "corporation": "corp", "corp": "corp",
+    "company": "co", "co": "co",
+    "limited": "ltd", "ltd": "ltd",
+    "llc": "llc", "lp": "lp", "plc": "plc",
+    "street": "st", "st": "st",
+    "avenue": "ave", "ave": "ave", "av": "ave",
+    "road": "rd", "rd": "rd",
+    "boulevard": "blvd", "blvd": "blvd",
+    "drive": "dr", "dr": "dr",
+    "lane": "ln", "ln": "ln",
+    "court": "ct", "ct": "ct",
+    "place": "pl", "pl": "pl",
+    "highway": "hwy", "hwy": "hwy",
+    "parkway": "pkwy", "pkwy": "pkwy",
+    "square": "sq", "sq": "sq",
+    "suite": "ste", "ste": "ste",
+    "apartment": "apt", "apt": "apt",
+    "north": "n", "south": "s", "east": "e", "west": "w",
+    "saint": "st",
+}
+
+
+def normalize_for_match(text: str | None) -> str:
+    """Strip *style* so that what's left is content. Lowercase; &→and; drop
+    apostrophes/periods/commas/quotes with no gap (L.L.C.→llc, Stone's→stones);
+    other separators → space; canonicalize corporate + street tokens."""
+    t = (text or "").casefold()
+    t = t.replace("&", " and ")
+    t = re.sub(r"[.,'’\"]", "", t)
+    t = re.sub(r"[^a-z0-9]+", " ", t)
+    return " ".join(_CANON.get(tok, tok) for tok in t.split())
+
+
+def _raw_fuzzy(a: str, b: str, token_set: bool = False) -> float:
     score = max(fuzz.ratio(a, b), fuzz.token_sort_ratio(a, b))
     if token_set:
         score = max(score, fuzz.token_set_ratio(a, b))
     return score
+
+
+def fuzzy_score(declared: str, extracted: str, token_set: bool = False) -> float:
+    """Style-insensitive similarity over normalized strings."""
+    return _raw_fuzzy(normalize_for_match(declared), normalize_for_match(extracted), token_set)
 
 
 # Real labels almost always qualify the producer ("Bottled by X", "Distilled
@@ -119,13 +166,24 @@ def _matrix_field(field, declared, value, confidence, compare_declared=None,
     if confidence < HIGH_CONFIDENCE:
         return _result(field, declared, value, confidence, WARN,
                        f"The AI was not confident reading the {label.lower()}. An agent should check the label image.")
-    score = fuzzy_score(compare_declared or declared, compare_value or value, token_set=token_set)
-    if score >= FUZZY_PASS_THRESHOLD:
+    nd = normalize_for_match(compare_declared if compare_declared is not None else declared)
+    nv = normalize_for_match(compare_value if compare_value is not None else value)
+    # PASS only when identical once style is stripped — so punctuation/casing/
+    # suffix differences pass, but a real spelling or wording difference does not.
+    if nd == nv:
         return _result(field, declared, value, confidence, PASS,
                        f"{label} matches the application.")
+    # class_type only: a declared class fully contained in the label's more
+    # specific designation ("Whiskey" ⊂ "Kentucky Straight Bourbon Whiskey").
+    if token_set and fuzz.token_set_ratio(nd, nv) >= 100:
+        return _result(field, declared, value, confidence, PASS,
+                       f"{label} matches the application (the label is more specific).")
+    score = _raw_fuzzy(nd, nv, token_set=token_set)
     if score >= FUZZY_FAIL_THRESHOLD:
         return _result(field, declared, value, confidence, WARN,
-                       f"{label} on the label is close to the application but not an exact match (similarity {int(score)}/100). An agent should judge whether they mean the same thing.")
+                       f"{label} on the label differs from the application beyond formatting "
+                       f"(similarity {int(score)}/100) — this could be a typo or a different entity. "
+                       f"An agent should confirm they are the same.")
     return _result(field, declared, value, confidence, FAIL,
                    f"{label} on the label does not match the application (similarity {int(score)}/100).")
 
@@ -278,11 +336,21 @@ def validate(application_data: dict, extraction: dict) -> tuple[str, list[dict]]
         value, confidence, _notes = _get_extracted(extraction, field)
         if field == "class_type":
             r = _matrix_field(field, declared, value, confidence, token_set=True)
-            # "IPA" vs "India Pale Ale": an acronym of the other side is not a
-            # confident mismatch — a human should make that call.
-            if r["status"] == FAIL and value and (_is_acronym(declared, value) or _is_acronym(value, declared)):
-                r = _result(field, declared, value, confidence, WARN,
-                            "Class / type on the label looks like an abbreviation of the declared class. An agent should confirm they mean the same thing.")
+            # Class/type never auto-rejects: beverage-type taxonomy is out of
+            # scope (a generic declared class like "Wine" against a specific
+            # label "Cabernet Sauvignon" has no lexical overlap, and "IPA" vs
+            # "India Pale Ale" is an abbreviation). Without a taxonomy the
+            # system can't safely call a class mismatch wrong — so any non-match
+            # is WARN for a human, not FAIL.
+            if r["status"] == FAIL and value:
+                if _is_acronym(declared, value) or _is_acronym(value, declared):
+                    reason = ("Class / type on the label looks like an abbreviation of the "
+                              "declared class. An agent should confirm they mean the same thing.")
+                else:
+                    reason = ("Class / type on the label does not obviously match the declared "
+                              "class. The system does not model beverage-type relationships, so "
+                              "an agent should confirm whether they describe the same product.")
+                r = _result(field, declared, value, confidence, WARN, reason)
             results.append(r)
         elif field == "alcohol_content":
             results.append(_validate_alcohol(declared, value, confidence))
