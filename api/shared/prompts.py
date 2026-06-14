@@ -16,7 +16,7 @@ Return ONLY a valid JSON object. No preamble, no explanation, no markdown fences
   "net_contents":       { "value": "<exact text>", "confidence": 0.0-1.0, "notes": "" },
   "producer_name":      { "value": "<exact text>", "confidence": 0.0-1.0, "notes": "" },
   "producer_address":   { "value": "<exact text>", "confidence": 0.0-1.0, "notes": "" },
-  "country_of_origin":  { "value": "<exact text or null>", "confidence": 0.0-1.0, "notes": "" },
+  "country_of_origin":  { "value": "<country name only, or null>", "confidence": 0.0-1.0, "notes": "" },
   "government_warning": { "value": "<full text, preserve capitalization and punctuation>",
                           "confidence": 0.0-1.0,
                           "notes": "<describe any anomalies: not bold, title case, small font, truncated>" },
@@ -27,6 +27,9 @@ Rules:
 - Preserve exact capitalization. Never normalize.
 - Missing field across both images: value=null, confidence=1.0.
 - If an image is unusable: set <side>_image_quality.usable=false, still attempt all fields.
+- country_of_origin: extract ONLY the country itself (e.g. "Mexico"), not the caption
+  that introduces it. If the label reads "Country of Origin: Mexico" or "Product of
+  Mexico", the value is "Mexico". Preserve the country's own capitalization.
 - Confidence: 1.0=clear, 0.7-0.9=minor issue, 0.4-0.6=partial, <0.4=very unclear.
 - Only flag truly unreadable images as usable=false. Lower quality but readable = usable=true with low confidence on affected fields.
 """
