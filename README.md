@@ -2,8 +2,8 @@
 
 **Live site:** https://elijahwf.com/ttb
 
-**I thought the best way to share the design was a short video demo and walkthrough**: _[link]_.
-This README covers the same ground: approach, tools, and assumptions if you'd rather read.
+**I thought the best way to share the design was a short video demo and walkthrough**: _[CLICK HERE](https://www.youtube.com/watch?v=Lyd4fPOjq-4)_.
+This README covers the same approach, tools, and assumptions if you'd rather read.
 
 To show it works end to end I built 20 test applications and generated front-and-back labels for each, 40 images in all, every one with a specific deviation baked in to drive a different branch of the decision logic. 
 
@@ -38,14 +38,14 @@ Agent ──► /review queue ──► field-by-field table + label images ─�
 
 ## Decision Engine
 
-The design of the validation engine is a major part of this system. I chose to let AI only do read text off the image. The approve/reject logic is plain Python and is deterministic. I deliberately kept an LLM out of the decision path, because the point of the system is that every verdict is auditable and reproducible. Even the plain-language reason shown for each field (e.g. "Producer name uses the same words in a different order than the application") is a fixed template in `validation.py`, not LLM-generated text — so the same inputs always produce the same wording. Furthermore, it allows for a tighter grasp on how things are evaluated if guidance changes
+The design of the validation engine is a major part of this system. I chose to let AI only read text off the image. The approve/reject logic is plain Python and is deterministic. I deliberately kept an LLM out of the decision path, because the point of the system is that every verdict is auditable and reproducible. Even the plain-language reason shown for each field (e.g. "Producer name uses the same words in a different order than the application") is a fixed template in `validation.py`, not LLM-generated text — so the same inputs always produce the same wording. Furthermore, it allows for a tighter grasp on how things are evaluated if guidance changes
 
 The real work is deciding how strict to be, and two things are kept apart:
 
 1. Extraction confidence: is the model sure it read the label correctly? If not within a threshhold, the field goes to WARN so a human looks at the photo and can decide.
 2. Match quality: does the printed text mean the same thing as what was declared? This is strict on spelling and content but forgiving on style, so "STONE'S THROW" vs "Stone's Throw" and "LLC" vs "L.L.C." both pass. There are lots of other intricacies here that make the engine really good, but I'll leave that for a deep dive
 
-The rule of thumb is that WARN is reserved for differences agent expertise is needed, like an abbreviation, an acronym, or an extra word. Kicking a submission back to the submitter automatically is a small ask and puts the more of the burden on the submitter instead of the agents. The full PASS/WARN/FAIL ladder and thresholds are in [docs/validation.md](docs/validation.md).
+The rule of thumb is that WARN is reserved for differences where agent expertise is needed, like an abbreviation, an acronym, or an extra word. Kicking a submission back to the submitter automatically is a small ask and puts the more of the burden on the submitter instead of the agents. The full PASS/WARN/FAIL ladder and thresholds are in [docs/validation.md](docs/validation.md).
 
 ## Tools and infrastructure
 
@@ -64,9 +64,9 @@ The rule of thumb is that WARN is reserved for differences agent expertise is ne
 ## The test fixtures
 
 The 20 cases live in `test-fixtures/`. Each one is a pair of generated label images plus
-the declared JSON, and the deviation between the two is the thing under test. I tried to get a large diversity of images and hit many edge cases I can think of for instance switching front and back photos, or things typos that are deliberate (vinyards instead of vineyards). In total there are  6 PASS, 4 WARN, 9 FAIL, 1 unusable.
+the declared JSON, and the deviation between the two is the thing under test. I tried to get a large diversity of images and hit many edge cases I can think of for instance switching front and back photos, or deliberate typos (vinyards instead of vineyards). In total there are 6 PASS, 4 WARN, 9 FAIL, 1 unusable.
 
-[test-fixtures/labels/README.md](test-fixtures/labels/README.md) has the exact image-generator prompt with its deviation baked in. The same 20 rows also exist as `batch-sample.csv` for exercising the batch-upload path. 
+[test-fixtures/README.md](test-fixtures/README.md) has the exact image-generator prompt with its deviation baked in. The same 20 rows also exist as `batch-sample.csv` for exercising the batch-upload path. 
 
 ## Repo map
 
