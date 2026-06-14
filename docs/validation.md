@@ -5,6 +5,13 @@ extracted value against the declared application data and produces an auditable
 PASS / WARN / FAIL per field with a plain-language reason. WARN is the only state that
 reaches a human.
 
+**Every status and reason string is produced by this engine, not the LLM.** The model
+only transcribes (`value`, `confidence`, and the warning's formatting flags); each reason
+the user sees is a fixed template in `validation.py` with the field, declared, and
+extracted values interpolated in. This keeps decisions deterministic and reproducible —
+the same inputs always yield the same outcome and wording, with nothing invented by the
+model.
+
 ## Two axes: extraction confidence vs match quality
 
 These are kept separate by design:

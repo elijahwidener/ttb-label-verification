@@ -38,7 +38,7 @@ Agent ──► /review queue ──► field-by-field table + label images ─�
 
 ## Decision Engine
 
-The design of the validation engine is a major part of this system. I chose to let AI only do read text off the image. The approve/reject logic is plain Python and is deterministic. I deliberately kept an LLM out of the decision path, because the point of the system is that every verdict is auditable and reproducible. Furthermore, it allows for a tighter grasp on how things are evaluated if guidance changes
+The design of the validation engine is a major part of this system. I chose to let AI only do read text off the image. The approve/reject logic is plain Python and is deterministic. I deliberately kept an LLM out of the decision path, because the point of the system is that every verdict is auditable and reproducible. Even the plain-language reason shown for each field (e.g. "Producer name uses the same words in a different order than the application") is a fixed template in `validation.py`, not LLM-generated text — so the same inputs always produce the same wording. Furthermore, it allows for a tighter grasp on how things are evaluated if guidance changes
 
 The real work is deciding how strict to be, and two things are kept apart:
 

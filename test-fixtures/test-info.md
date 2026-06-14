@@ -8,11 +8,3 @@ PASS/WARN/FAIL outcomes — lives in **[labels/README.md](labels/README.md)**.
 - `application-N.json` — declared application data for single-submission testing.
 - `batch-sample.csv` — the same 20 cases for batch-upload testing (declared data +
   matching filenames).
-
-Quick reference for the three originals:
-
-- **Case 1 — Copper Still Bourbon → PASS.** All fields match; warning bold + all caps.
-- **Case 2 — Harrow Peak Wine → FAIL.** Warning is title case and not bold. Use to test
-  the auto-rejection flow and the submitter override modal.
-- **Case 3 — Valle Dorado Beer → WARN.** Slightly angled with glare → low confidence on
-  some fields. Also exercises country of origin (Mexico).
