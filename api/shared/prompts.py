@@ -19,7 +19,9 @@ Return ONLY a valid JSON object. No preamble, no explanation, no markdown fences
   "country_of_origin":  { "value": "<country name only, or null>", "confidence": 0.0-1.0, "notes": "" },
   "government_warning": { "value": "<full text, preserve capitalization and punctuation>",
                           "confidence": 0.0-1.0,
-                          "notes": "<describe any anomalies: not bold, title case, small font, truncated>" },
+                          "is_bold": true/false,
+                          "font_legible": true/false,
+                          "notes": "" },
   "front_image_quality": { "usable": true/false, "issues": "<describe glare/angle/blur or empty>" },
   "back_image_quality":  { "usable": true/false, "issues": "<describe glare/angle/blur or empty>" }
 }
@@ -30,6 +32,10 @@ Rules:
 - country_of_origin: extract ONLY the country itself (e.g. "Mexico"), not the caption
   that introduces it. If the label reads "Country of Origin: Mexico" or "Product of
   Mexico", the value is "Mexico". Preserve the country's own capitalization.
+- government_warning: is_bold=true if the warning text appears in bold type, false only
+  if it is clearly NOT bold. font_legible=true if it is legible and not noticeably
+  smaller than surrounding label text, false only if it is clearly too small to read.
+  When unsure, use true. Put any other observations (e.g. truncation) in notes.
 - Confidence: 1.0=clear, 0.7-0.9=minor issue, 0.4-0.6=partial, <0.4=very unclear.
 - Only flag truly unreadable images as usable=false. Lower quality but readable = usable=true with low confidence on affected fields.
 """

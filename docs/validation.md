@@ -81,10 +81,11 @@ absent) → FAIL for required fields; `null` with low confidence → WARN.
 - **country_of_origin** — declared empty + extracted null → PASS; declared empty but
   found on label → FAIL (WARN if low confidence); otherwise the fuzzy matrix.
 - **government_warning** — validated against the statutory wording, not declared data.
-  Order: confidence < 0.5 → WARN ("partially unreadable") → AI-notes formatting checks
-  (title case / not all caps, not bold, small font → FAIL, *even when the wording
-  matches*) → "GOVERNMENT WARNING:" prefix must be literally capitalized on the label
-  (catches title case directly) → **case-insensitive** whitespace-normalized wording
+  Order: confidence < 0.5 → WARN ("partially unreadable") → AI formatting flags
+  (is_bold / font_legible reported false → FAIL, *even when the wording matches*; an
+  omitted or uncertain flag defaults to compliant and never fails) → "GOVERNMENT
+  WARNING:" prefix must be literally capitalized on the label (catches title case
+  directly from the text) → **case-insensitive** whitespace-normalized wording
   match → PASS → otherwise FAIL. The wording match is case-insensitive because the
   statute requires capitals only for "GOVERNMENT WARNING:" — labels that print the
   entire warning in capitals are compliant and must pass.

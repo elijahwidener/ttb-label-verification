@@ -330,7 +330,19 @@ def _validate_country(declared, value, confidence):
     return _matrix_field(field, declared, value, confidence)
 
 
-def _validate_government_warning(value, confidence, notes):
+def _is_false(raw: dict, key: str) -> bool:
+    """True only when the AI affirmatively reported the flag as false (not bold,
+    not legible). Missing/None/unparseable defaults to compliant, so an omitted
+    or uncertain flag never forces a FAIL."""
+    v = raw.get(key) if isinstance(raw, dict) else None
+    if isinstance(v, bool):
+        return v is False
+    if isinstance(v, str):
+        return v.strip().lower() in {"false", "no"}
+    return False
+
+
+def _validate_government_warning(value, confidence, raw):
     field = "government_warning"
     declared = GOVERNMENT_WARNING_REQUIRED
     if value is None:
@@ -339,15 +351,12 @@ def _validate_government_warning(value, confidence, notes):
     if confidence < WARNING_CONFIDENCE_THRESHOLD:
         return _result(field, declared, value, confidence, WARN,
                        "Warning text partially unreadable. An agent should check the label image.")
-    # Formatting checks from the AI's notes apply regardless of text match.
-    notes_l = (notes or "").lower()
-    if "title case" in notes_l or "not all caps" in notes_l:
-        return _result(field, declared, value, confidence, FAIL,
-                       "GOVERNMENT WARNING: must be in all caps.")
-    if "not bold" in notes_l:
+    # Formatting checks from the AI's explicit flags apply regardless of text
+    # match. Only an affirmative "false" fails — see _is_false.
+    if _is_false(raw, "is_bold"):
         return _result(field, declared, value, confidence, FAIL,
                        "GOVERNMENT WARNING: must be bold.")
-    if "small font" in notes_l or "smaller font" in notes_l:
+    if _is_false(raw, "font_legible"):
         return _result(field, declared, value, confidence, FAIL,
                        "Warning text font size appears smaller than surrounding text.")
     norm_extracted = _norm(value)
@@ -405,8 +414,10 @@ def validate(application_data: dict, extraction: dict) -> tuple[str, list[dict]]
         else:
             results.append(_matrix_field(field, declared, value, confidence))
 
-    gw_value, gw_confidence, gw_notes = _get_extracted(extraction, "government_warning")
-    results.append(_validate_government_warning(gw_value, gw_confidence, gw_notes))
+    gw_value, gw_confidence, _gw_notes = _get_extracted(extraction, "government_warning")
+    gw_raw = extraction.get("government_warning") if isinstance(extraction, dict) else None
+    results.append(_validate_government_warning(
+        gw_value, gw_confidence, gw_raw if isinstance(gw_raw, dict) else {}))
 
     return overall_status(results), results
 

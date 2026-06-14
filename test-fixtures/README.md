@@ -22,9 +22,9 @@ producer name & address, and country of origin.
 **Prompt:** A beer label, front and back. Front: brand "Iron Gate Brewing", class "American Pale Ale", "5.2% Alc./Vol.", "355 mL". Back: producer "Iron Gate Brewing Incorporated", "55 Canal St, Portland, ME 04101", and the government warning in bold caps.
 **Why:** Style-only differences (Inc→Incorporated, Street→St) are forgiven.
 
-### 5 — Smoky Hollow  ·  PASS
+### 5 — Smoky Hollow  ·  FAIL
 **Prompt:** A whiskey label, front and back. Front: brand "Smoky Hollow", class "Tennessee Whiskey", "50% Alc./Vol. (100 Proof)", "750 mL". Back: producer "Smoky Hollow Distillers LLC", "9 Ridge Rd, Asheville, NC 28801", and the government warning.
-**Why:** Declared class "Whiskey" is contained in the more specific label class.
+**Why:** Declared class "Whiskey" is contained in the more specific label class. This should pass but the government warning causes a fail.
 
 ### 6 — Northwind  ·  PASS
 **Prompt:** A gin label, front and back. Front: brand "Northwind", class "London Dry Gin", "47% Alc./Vol.", "750 mL". Back: producer "Northwind Spirits LLC", "200 Harbor Blvd, Seattle, WA 98101", and the government warning.
